@@ -1,0 +1,177 @@
+﻿@model NbuWeb.Models.BankProduct
+
+@{
+    ViewData["Title"] = "Product Details";
+    var availableTermLengths = ViewBag.AvailableTermLengths as List<int>;
+}
+
+<h2>@Model.ProductName</h2>
+
+<div>
+    <h4>Bank Product</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">
+            Product Type
+        </dt>
+        <dd class="col-sm-10">
+            @Model.ProductType
+        </dd>
+        <dt class="col-sm-2">
+            Minimum Amount
+        </dt>
+        <dd class="col-sm-10">
+            @string.Format("{0:N2}", @Model.MinAmount)
+        </dd>
+        <dt class="col-sm-2">
+            Maximum Amount
+        </dt>
+        <dd class="col-sm-10">
+            @string.Format("{0:N2}", @Model.MaxAmount)
+        </dd>
+        <dt class="col-sm-2">
+            Interest Payment Interval
+        </dt>
+        <dd class="col-sm-10">
+            @Model.InterestPaymentInterval
+        </dd>
+        <dt class="col-sm-2">
+            Can Reinvest
+        </dt>
+        <dd class="col-sm-10">
+            @(ViewBag.CanReinvest ? "Yes" : "No")
+        </dd>
+    </dl>
+</div>
+
+<h4>Interest Rates and Penalties</h4>
+<hr />
+<table class="table">
+    <thead>
+        <tr>
+            <th>Term Length (Months)</th>
+            <th>USD Interest Rate</th>
+            <th>EUR Interest Rate</th>
+            <th>BGN Interest Rate</th>
+            <th>Government Tax Rate</th>
+            <th>Early Withdrawal Penalty Rate</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var detail in Model.InterestDetails)
+        {
+            <tr>
+                <td>@detail.TermLengthInMonths</td>
+                <td>@string.Format("{0:N2} %", detail.UsdInterestRate)</td>
+                <td>@string.Format("{0:N2} %", detail.EurInterestRate)</td>
+                <td>@string.Format("{0:N2} %", detail.BgnInterestRate)</td>
+                <td>@string.Format("{0:N2} %", detail.GovernmentTaxRate)</td>
+                <td>@string.Format("{0:N2} %", detail.EarlyWithdrawalPenaltyRate)</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<h4>Calculate Interest</h4>
+<hr />
+<form id="calculate-form" method="post">
+    <div class="form-group">
+        <label for="depositAmount">Deposit Amount</label>
+        <input type="number" class="form-control" id="depositAmount" name="depositAmount" required min="@Model.MinAmount" max="@Model.MaxAmount" />
+        <div class="invalid-feedback">
+            Deposit amount must be between @Model.MinAmount and @Model.MaxAmount.
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="currency">Currency</label>
+        <select class="form-control" id="currency" name="currency">
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+            <option value="BGN">BGN</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="termLength">Term Length (in months)</label>
+        <select class="form-control" id="termLength" name="termLength">
+            @foreach (var term in availableTermLengths)
+            {
+                <option value="@term">@term</option>
+            }
+        </select>
+    </div>
+    <div class="form-check">
+        <input type="checkbox" class="form-check-input" id="reinvest" name="reinvest" />
+        <label class="form-check-label" for="reinvest">Reinvest Interest</label>
+    </div>
+    <div id="monthly-deposit-group" class="form-group" style="display: none;">
+        <label for="monthlyDeposit">Monthly Deposit</label>
+        <input type="number" class="form-control" id="monthlyDeposit" name="monthlyDeposit" />
+    </div>
+    <button type="submit" class="btn btn-primary">Calculate</button>
+</form>
+
+<div id="calculation-result"></div>
+
+@section Scripts {
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#calculate-form').on('submit', function (e) {
+                e.preventDefault();
+
+                var depositAmount = parseFloat($('#depositAmount').val());
+                var minAmount = parseFloat($('#depositAmount').attr('min'));
+                var maxAmount = parseFloat($('#depositAmount').attr('max'));
+
+                if (depositAmount < minAmount || depositAmount > maxAmount) {
+                    $('#depositAmount').addClass('is-invalid');
+                    return;
+                } else {
+                    $('#depositAmount').removeClass('is-invalid');
+                }
+
+                var productId = @Model.ProductId;
+                var currency = $('#currency').val();
+                var termLength = $('#termLength').val();
+                var reinvest = $('#reinvest').is(':checked');
+                var monthlyDeposit = $('#monthlyDeposit').val();
+                var url = reinvest ? '/BankProducts/CalculateInterestReinvested' : '/BankProducts/CalculateInterestNonReinvested';
+
+                var data = {
+                    id: productId,
+                    depositAmount: depositAmount,
+                    currency: currency,
+                    termLength: termLength
+                };
+
+                if (reinvest && monthlyDeposit) {
+                    url = '/BankProducts/CalculateRecurringDeposit';
+                    data.monthlyDeposit = monthlyDeposit;
+                }
+
+                $.ajax({
+                    type: 'POST',
+                    url: url,
+                    data: data,
+                    success: function (result) {
+                        $('#calculation-result').html(result);
+                    },
+                    error: function (error) {
+                        console.error('Error:', error);
+                    }
+                });
+            });
+
+            $('#reinvest').change(function () {
+                if ($(this).is(':checked')) {
+                    $('#monthly-deposit-group').show();
+                } else {
+                    $('#monthly-deposit-group').hide();
+                }
+            });
+
+            // Trigger change event to set initial state
+            $('#reinvest').trigger('change');
+        });
+    </script>
+}

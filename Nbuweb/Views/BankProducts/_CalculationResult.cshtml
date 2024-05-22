@@ -1,0 +1,28 @@
+﻿@model NbuWeb.Models.CalculationResultViewModel
+
+<h3>Calculation Result without Reinvestment</h3>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Month</th>
+            <th>Interest Earned</th>
+            <th>Total Interest Earned</th>
+            <th>Total Amount</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var result in Model.Results)
+        {
+            <tr>
+                <td>@result.Month</td>
+                <td>@string.Format("{0:N2} {1}", result.Interest, Model.CurrencySymbol)</td>
+                <td>@string.Format("{0:N2} {1}", Model.TotalInterestEarned, Model.CurrencySymbol)</td>
+                <td>@string.Format("{0:N2} {1}", result.TotalAmount, Model.CurrencySymbol)</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<p>Total Interest Earned after @Model.Results.Count months: @string.Format("{0:N2} {1}", Model.TotalInterestEarned, Model.CurrencySymbol)</p>
+<p>The interest was paid to your bank account each month.</p>

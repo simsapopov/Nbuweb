@@ -1,0 +1,20 @@
+﻿@model NbuWeb.Models.TaxesPenaltiesViewModel
+
+<h3>Taxes & Penalties</h3>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Total Interest Earned</th>
+            <th>Tax Amount</th>
+            <th>Penalty Amount</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>@string.Format("{0:N2} {1}", Model.TotalInterest, Model.CurrencySymbol)</td>
+            <td>@string.Format("{0:N2} {1}", Model.TaxAmount, Model.CurrencySymbol)</td>
+            <td>@string.Format("{0:N2} {1}", Model.PenaltyAmount, Model.CurrencySymbol)</td>
+        </tr>
+    </tbody>
+</table>

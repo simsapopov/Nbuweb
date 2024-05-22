@@ -1,0 +1,25 @@
+﻿@model IEnumerable<NbuWeb.Models.BankProduct>
+
+<div class="row">
+    @foreach (var product in Model)
+    {
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">@product.ProductName</h5>
+                    <p class="card-text">
+                        Type: @product.ProductType<br>
+                        Min Amount: @product.MinAmount<br>
+                        Max Amount: @product.MaxAmount<br>
+                        Fixed Term: @(product.FixedTerm ? "Yes" : "No")<br>
+                        Max Term Length: @product.MaxTermLength<br>
+                        Flex Term: @(product.FlexTerm ? "Yes" : "No")<br>
+                        Interest Payment Interval: @product.InterestPaymentInterval<br>
+                        Can Reinvest: @(product.CanReinvest ? "Yes" : "No")
+                    </p>
+                    <a href="@Url.Action("Details", new { id = product.ProductId })" class="btn btn-primary">Details</a>
+                </div>
+            </div>
+        </div>
+    }
+</div>
